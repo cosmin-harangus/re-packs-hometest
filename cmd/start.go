@@ -69,13 +69,24 @@ func getPackSizesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"sizes": calculator.GetPackSizes()})
 }
 
+// setPackSizesHandler handles the request to set the pack sizes for the calculator
 func setPackSizesHandler(c *gin.Context) {
 	var packSizes []int
+	// bind the request
 	if err := c.BindJSON(&packSizes); err != nil {
 		log.Error().Err(err).Msg("Unable to bind pack sizes")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unable to bind pack sizes"})
 		return
 	}
+	// validate the pack sizes
+	for i := 0; i < len(packSizes); i++ {
+		if packSizes[i] <= 0 {
+			log.Error().Msg("Pack size must be greater than 0")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Pack size must be greater than 0"})
+			return
+		}
+	}
+	// set the pack sizes
 	calculator.SetPackSizes(packSizes)
 	c.JSON(http.StatusOK, gin.H{"sizes": calculator.GetPackSizes()})
 }
