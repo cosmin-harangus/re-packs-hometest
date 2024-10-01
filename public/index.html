@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <title>Shipment Calculator</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" 
+            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  </head>
+  <body>
+    <form>
+      <div class="space-y-12">
+        <div class="border-b border-gray-900/10 pb-12">
+          <h2 class="text-base font-semibold leading-7 text-gray-900">Pack Sizes</h2>
+          <p class="mt-1 text-sm leading-6 text-gray-600">Change the pack sizes used to calculate the shipment.</p>
+    
+          <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+            <div class="sm:col-span-3">
+              <label for="size" class="block text-sm font-medium leading-6 text-gray-900">Sizes</label>
+              <div class="mt-2 sizes">
+                <input type="number" name="size[]"
+                  class="block w-32 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+              </div>
+              <div class="mt-2">
+                <button type="button" id="add-size" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add size</button>
+                <button type="button" id="save-sizes" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Save sizes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-12">
+        <div class="border-b border-gray-900/10 pb-12">
+          <h2 class="text-base font-semibold leading-7 text-gray-900">Shipment Information</h2>
+          <p class="mt-1 text-sm leading-6 text-gray-600">Calculate the shipment for a given order.</p>
+    
+          <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+            <div class="sm:col-span-3">
+              <label for="order" class="block text-sm font-medium leading-6 text-gray-900">Order</label>
+              <div class="mt-2">
+                <input type="number" name="order" value="10"
+                  class="block w-32 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+              </div>
+              <div class="mt-2">
+                <button type="button" id="generate-shipment" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Generate Shipment</button>
+              </div>
+            </div>
+          </div>
+          <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+            <div class="sm:col-span-3">
+              <table class="table-auto">
+                <thead>
+                  <tr>
+                    <th class="px-4 py-2">Pack Size</th>
+                    <th class="px-4 py-2">Quantity</th>
+                  </tr>
+                </thead>
+                <tbody id="shipment-table">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <script type="text/javascript">
+      $(document).ready(function() {
+        $.get('/api/packs', function(response) {
+          $('.sizes').empty();
+          $.each(response.sizes, function(index, size) {
+            $('.sizes').append('<input type="number" name="size[]" class="block w-32 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" value="' + size + '" />');
+          });
+        });
+        $('#add-size').click(function() {
+          var size = $('<input type="number" name="size[]" class="block w-32 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />');
+          $('.sizes').append(size);
+        });
+        $('#save-sizes').click(function() {
+          var sizes = [];
+          $('.sizes input').each(function() {
+            sizes.push(1*$(this).val());
+          });
+          $.post('/api/packs', JSON.stringify(sizes), function(response) {
+            alert('Sizes saved successfully');
+          }, 'json');
+        });
+
+        $('#generate-shipment').click(function() {
+          var order = $('input[name="order"]').val();
+          $.get('/api/order/fulfill?order=' + order, function(response) {
+            $('#shipment-table').empty();
+            for (const [key, value] of Object.entries(response.shipment)) {
+              $('#shipment-table').append('<tr><td>' + key + '</td><td>' + value + '</td></tr>');
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
